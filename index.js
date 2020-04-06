@@ -5,6 +5,7 @@ const joi = require('joi'); //imported from npm
 const db = require('@arangodb').db;
 const ngsiColl = db._collection('ngsiCollection');
 const ngsiEdgeColl = db._collection('ngsiEdgeCollection');
+const patient = db._collection('patientJSON');
 const aql = require('@arangodb').aql;
 
 // Registers the router with the Foxx service context
@@ -244,3 +245,25 @@ router.post('/relationship-to-edge', function (req, res) {
 })
 .summary('store ngsi-ld relationship data in ngsiEdgeCollection from ngsiCollection')
 .description('store ngsi-ld relationship data from ngsiCollection');
+
+// get relationship of relationship
+router.get('/relationship', function (req, res) {
+    const types = db._query(aql`
+        FOR ed IN patientEdge
+        FILTER ed._from == "patientJSON/615355"
+        LET edge = ed._id
+
+        FOR rel IN patientEdge
+            FILTER rel._from == edge
+
+        RETURN rel
+        `)
+        try {
+            res.send(types);
+        } catch(e) {
+            res.send(e.toString())
+        }
+})
+.summary('Relationship of Relationship')
+.description('Relationship of Relationship')
+
